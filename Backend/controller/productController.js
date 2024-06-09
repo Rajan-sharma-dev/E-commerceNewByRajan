@@ -1,24 +1,30 @@
 const Product = require("../models/productModels")
 const ErrorHandler = require("../utils/errorhandler")
+const catchAsyncErrors = require("../Middleware/catchAsyncErrors")
+const ApiFeatures = require("../utils/apifeatures")
 
 
-exports.createProduct = async (req,res, next) => {
+exports.createProduct = catchAsyncErrors(async (req,res, next) => {
     const product = await Product.create(req.body)
     res.status(201).json({
         success: true,
         product
-    })
-}
+    });
+});
 
-exports.getAllProducts = async (req,res) => {
-    const products = await Product.find();
+exports.getAllProducts = catchAsyncErrors(async (req,res) => {
+    const product =  Product.find();
+    const apiFeatures = new ApiFeatures(product, req.query).search().filter().pagination(5)
+    const products = await apiFeatures.query
+    const productCount = await Product.countDocuments()
     res.status(200).json({message: "Route is working fine",
         success: true,
-        products
-    })
-}
+        products,
+        productCount
+    });
+});
 
-exports.getSingleProduct = async (req, res, next) => {
+exports.getSingleProduct = catchAsyncErrors(async (req, res, next) => {
     const product = await Product.findById(req.params.id);
   
     if (!product) {
@@ -28,10 +34,10 @@ exports.getSingleProduct = async (req, res, next) => {
       success: true,
       product
     });
-}
+})
 
 
-exports.updateProduct = async (req, res) => {
+exports.updateProduct = catchAsyncErrors(async (req, res) => {
     let product = await Product.findById(req.params.id)
     if (!product) {
       return next(new ErrorHandler("Product Not Found", 404))
@@ -41,9 +47,9 @@ exports.updateProduct = async (req, res) => {
         success: true,
         product
     })
-}
+})
 
-exports.deleteProduct = async (req, res, next) => {
+exports.deleteProduct = catchAsyncErrors(async (req, res, next) => {
     const product = await Product.findById(req.params.id);
   
     if (!product) {
@@ -61,4 +67,4 @@ exports.deleteProduct = async (req, res, next) => {
       success: true,
       message: "Product Delete Successfully",
     });
-  };
+  })
